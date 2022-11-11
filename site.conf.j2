@@ -1,0 +1,23 @@
+server {
+  # ipv4
+  listen 80;
+  # ipv6
+  listen [::]:80;
+  server_name {{ domain }};
+  # secure connection port
+  listen 443 ssl;
+  # sent to browser
+  ssl_certificate /etc/ssl/certs/{{ domain }}.crt;
+  ssl_certificate_key /etc/ssl/private/{{ domain }}.key;
+  # redirect non-https traffic to https
+  if ($scheme != "https") {
+    return 301 https://$host$request_uri;
+  }
+  # where html file is
+  root /var/www/{{ domain }};
+  location / {
+    index evt-web.html
+    # if file requested unavailable return 404
+    try_files $uri $uri/ =404;
+  }
+}

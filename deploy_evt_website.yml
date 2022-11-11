@@ -1,0 +1,36 @@
+---
+- name: Deploy nginx static evt website.
+  hosts: localhost
+  vars:
+    image_name: evt-web-image
+    instance_name: evt-web-container
+    domain: evt-web.com
+    private_key_path: '{{ domain }}.key'
+    certificate_path: '{{ domain }}.crt'
+    csr_path: '{{ domain }}.csr'
+    ssh_key_name: '{{ instance_name }}-sshkey'
+    region: "us-east-1"
+  environment:
+    AWS_PROFILE: "{{ profile }}" # MUST pass in as command line arg
+    AWS_REGION: "{{ region }}"
+  tasks:
+    - name: Generate self-signed certificate and trust on localhost.
+      ansible.builtin.import_tasks: cert_tasks.yml
+
+    - name: Set up and launch EC2 instance.
+      ansible.builtin.import_tasks: ec2_launch_tasks.yml
+
+    - name: Configure nginx in launched instance.
+      ansible.builtin.import_tasks: configure_nginx_tasks.yml
+      become: true
+      delegate_to: '{{ instance_name }}'
+    
+    - name: Test HTTPS connection.
+      ansible.builtin.command: 'curl -k https://{{ public_ip }}'
+
+    - name: Test HTTP connection.
+      ansible.builtin.command: 'curl -k -L http://{{ public_ip }}'
+
+    - name: Open in browser.
+      ansible.builtin.command: 'open https://{{ public_ip }}'
+

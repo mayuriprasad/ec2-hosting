@@ -1,0 +1,95 @@
+- name: Install boto3
+  ansible.builtin.pip:
+      name: 
+        - boto3
+
+- name: Remove existing ssh_key_name pair
+  amazon.aws.ec2_key:
+    name: '{{ ssh_key_name }}'
+    state: absent
+
+- name: Create ssh_key_name
+  amazon.aws.ec2_key:
+    name: '{{ ssh_key_name }}'
+  register: ssh_key_result
+
+- name: Save ssh private key
+  copy: content="{{ ssh_key_result.key.private_key }}" dest="{{ ssh_key_name }}.pem" mode=0600
+
+- name: Retrieve VPC subnet info
+  amazon.aws.ec2_vpc_subnet_info:
+    filters:
+      availabilityZone: '{{ region }}a'
+      defaultForAz: true
+  register: subnet
+
+- name: debug
+  ansible.builtin.debug:
+    var: subnet
+
+- name: Get public IP
+  community.general.ipify_facts:
+  register: public_ip
+
+- name: Add new inbound rule to default security group # add other rule or delete description
+  amazon.aws.ec2_group:
+    name: default
+    description: Allow ssh and http/https
+    vpc_id: '{{ subnet["subnets"][0]["vpc_id"] }}'
+    rules:
+      - proto: tcp
+        ports:
+          - 443
+          - 80
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        ports: 22
+        cidr_ip: '{{ ipify_public_ip }}/32'
+
+- name: Terminate running EC2 instance.
+  amazon.aws.ec2_instance:
+    name: '{{ instance_name }}'
+    state: absent
+
+- name: Start an EC2 instance.
+  amazon.aws.ec2_instance:
+    name: '{{ instance_name }}'
+    key_name: '{{ ssh_key_name }}'
+    vpc_subnet_id: '{{ subnet["subnets"][0]["id"] }}' 
+    instance_type: t2.micro
+    security_group: default
+    network:
+      assign_public_ip: true
+    image_id: ami-08c40ec9ead489470 
+    user_data: "{{ lookup('file', 'install_packages.sh') }}"
+    state: started
+  register: ec2
+
+- name: Save public IP address.
+  ansible.builtin.set_fact:
+    public_ip: "{{ ec2['instances'][0]['network_interfaces'][0]['private_ip_addresses'][0]['association']['public_ip'] }}"
+  
+# - name: debug ec2
+#   ansible.builtin.debug:
+#     var: ec2
+
+# - name: Gather EC2 instance facts
+#   amazon.aws.ec2_instance_info:
+#     instance_ids: "{{ ec2['instance_ids'] | list }}"
+#   register: ec2_node_info
+
+# - name: debug ec2_node
+#   ansible.builtin.debug:
+#     var: ec2_node_info
+
+- name: Add EC2 Instances to inventory
+  ansible.builtin.add_host:
+    hostname: '{{ instance_name }}'
+    ansible_user: ubuntu
+    ansible_host: '{{ public_ip }}'
+    ansible_ssh_private_key_file: '{{ ssh_key_name }}.pem'
+    ansible_ssh_common_args: >
+      -o IdentitiesOnly=yes
+      -o BatchMode=yes
+      -o UserKnownHostsFile=/dev/null
+      -o StrictHostKeyChecking=no

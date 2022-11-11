@@ -1,0 +1,30 @@
+- name: Generate private key.
+  community.crypto.openssl_privatekey:
+    path: "{{ private_key_path }}"
+    backup: true
+
+- name: Generate a CSR.
+  community.crypto.openssl_csr:
+    common_name: "{{ domain }}"
+    country_name: "US"
+    locality_name: "Santa Monica"
+    state_or_province_name: "CA"
+    organization_name: "Enterprise Vision Technologies"
+    privatekey_path: "{{ private_key_path }}"
+    subject_alt_name: "{{ ['DNS:' + domain] + ansible_facts['all_ipv4_addresses'] | map('regex_replace', '^', 'IP:') | list }}"
+    path: "{{ csr_path }}"
+    backup: true
+
+- name: Generate a certificate.
+  community.crypto.x509_certificate:
+    path: "{{ certificate_path }}"
+    privatekey_path: "{{ private_key_path }}"
+    csr_path: "{{ csr_path }}"
+    provider: selfsigned
+    backup: true
+
+- name: Install and trust the certificate
+  ansible.builtin.command: /usr/bin/security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "{{ certificate_path }}"
+  become: true
+  changed_when: false
+
