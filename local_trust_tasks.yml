@@ -1,0 +1,21 @@
+- name: Install and trust the certificate
+  ansible.builtin.command: /usr/bin/security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "{{ certificate_path }}"
+  become: true
+  changed_when: false
+  when: ansible_os_family == 'Darwin'
+
+- name: Replace previous IP-domain mapping for Mac/Debian/RedHat
+  become: true
+  ansible.builtin.replace:
+    path: /etc/hosts
+    regexp: '.*{{ domain }}'
+    replace: '{{ public_ip }} {{ domain }}'
+  when: ansible_os_family == 'Darwin' or ansible_os_family == 'Debian' or ansible_os_family == 'RedHat'
+
+- name: Replace previous IP-domain mapping for Windows
+  become: true
+  ansible.builtin.replace:
+    path: C:\Windows\System32\drivers\etc\hosts
+    regexp: '.*{{ domain }}'
+    replace: '{{ public_ip }} {{ domain }}'
+  when: ansible_os_family == 'Windows'

@@ -1,0 +1,17 @@
+- name: Test HTTPS connection.
+  ansible.builtin.command: 'curl -k https://{{ public_ip }}'
+
+- name: Test HTTP connection.
+  ansible.builtin.command: 'curl -k -L http://{{ public_ip }}'
+
+- name: Test HTTP connection with domain.
+  ansible.builtin.command: 'curl -k http://{{ domain }}'
+
+- name: Test HTTPS connection with domain.
+  ansible.builtin.command: 'curl -k https://{{ domain }}'
+
+- name: Open in browser with domain.
+  ansible.builtin.command: 'open https://{{ domain }}'
+
+- name: Open in browser with ip.
+  ansible.builtin.command: 'open https://{{ public_ip }}'
