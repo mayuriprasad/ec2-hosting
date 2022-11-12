@@ -11,7 +11,7 @@
     state_or_province_name: "CA"
     organization_name: "Enterprise Vision Technologies"
     privatekey_path: "{{ private_key_path }}"
-    subject_alt_name: "{{ ['DNS:' + domain] + ansible_facts['all_ipv4_addresses'] | map('regex_replace', '^', 'IP:') | list }}"
+    subject_alt_name: "{{ ['DNS:' + domain] + ['IP:' + public_ip ] }}"
     path: "{{ csr_path }}"
     backup: true
 
@@ -22,9 +22,5 @@
     csr_path: "{{ csr_path }}"
     provider: selfsigned
     backup: true
-
-- name: Install and trust the certificate
-  ansible.builtin.command: /usr/bin/security add-trusted-cert -d -r trustRoot -k /Library/Keychains/System.keychain "{{ certificate_path }}"
-  become: true
-  changed_when: false
+    
 

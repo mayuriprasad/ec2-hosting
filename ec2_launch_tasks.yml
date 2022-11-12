@@ -23,18 +23,17 @@
       defaultForAz: true
   register: subnet
 
-- name: debug
-  ansible.builtin.debug:
-    var: subnet
+# - name: debug
+#   ansible.builtin.debug:
+#     var: subnet
 
 - name: Get public IP
   community.general.ipify_facts:
-  register: public_ip
 
-- name: Add new inbound rule to default security group # add other rule or delete description
+- name: Add new inbound rules to default security group
   amazon.aws.ec2_group:
     name: default
-    description: Allow ssh and http/https
+    description: default VPC security group
     vpc_id: '{{ subnet["subnets"][0]["vpc_id"] }}'
     rules:
       - proto: tcp
@@ -68,19 +67,6 @@
 - name: Save public IP address.
   ansible.builtin.set_fact:
     public_ip: "{{ ec2['instances'][0]['network_interfaces'][0]['private_ip_addresses'][0]['association']['public_ip'] }}"
-  
-# - name: debug ec2
-#   ansible.builtin.debug:
-#     var: ec2
-
-# - name: Gather EC2 instance facts
-#   amazon.aws.ec2_instance_info:
-#     instance_ids: "{{ ec2['instance_ids'] | list }}"
-#   register: ec2_node_info
-
-# - name: debug ec2_node
-#   ansible.builtin.debug:
-#     var: ec2_node_info
 
 - name: Add EC2 Instances to inventory
   ansible.builtin.add_host:
