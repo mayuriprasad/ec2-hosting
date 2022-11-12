@@ -1,10 +1,7 @@
 # evt-challenge
 
 ## Usage: 
-- Run command 
-```
-ansible-playbook -e profile=YOUR_AWS_PROFILE_CREDENTIALS deploy_evt_website.yml -K
-``` 
+- Run command ```ansible-playbook -e profile=YOUR_AWS_PROFILE_CREDENTIALS deploy_evt_website.yml -K```
 in terminal. 
     - This command takes the variable 'profile' as an argument. Store your AWS credentials in the ~/.aws/credentials file and pass the associated profile as the parameter, in place of YOUR_AWS_PROFILE_CREDENTIALS.
     - You will be prompted for your machine password; this is so the script can allow your machine to trust the generated self-signed certificate and map the generated IP to the domain name.
