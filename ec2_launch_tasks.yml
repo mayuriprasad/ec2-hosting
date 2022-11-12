@@ -23,10 +23,6 @@
       defaultForAz: true
   register: subnet
 
-# - name: debug
-#   ansible.builtin.debug:
-#     var: subnet
-
 - name: Get public IP
   community.general.ipify_facts:
 
