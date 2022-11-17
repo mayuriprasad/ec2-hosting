@@ -6,12 +6,15 @@
 
 - name: Test HTTP connection with domain.
   ansible.builtin.command: 'curl -k http://{{ domain }}'
+  tags: local-trust
 
 - name: Test HTTPS connection with domain.
   ansible.builtin.command: 'curl -k https://{{ domain }}'
+  tags: local-trust
 
 - name: Open in browser with domain.
   ansible.builtin.command: 'open https://{{ domain }}'
+  tags: local-trust
 
 - name: Open in browser with ip.
   ansible.builtin.command: 'open https://{{ public_ip }}'
