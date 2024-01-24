@@ -1,4 +1,4 @@
-# evt-challenge
+# ec2-hosting
 
 ## Usage: 
 - Run command ```ansible-playbook -e profile=YOUR_AWS_PROFILE_CREDENTIALS deploy_evt_website.yml -K```
